@@ -6,7 +6,7 @@ local strategies = require('treewalker.strategies')
 
 local Treewalker = {}
 
----@alias Opts { highlight: boolean }
+---@alias Opts { highlight: boolean | integer }
 
 ---@type Opts
 Treewalker.opts = {}

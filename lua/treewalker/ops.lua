@@ -25,7 +25,8 @@ end
 
 ---Flash a highlight over the given range
 ---@param range Range4
-function M.highlight(range)
+---@param duration integer
+function M.highlight(range, duration)
   local start_row, start_col, end_row, end_col = range[1], range[2], range[3], range[4]
   local ns_id = vim.api.nvim_create_namespace("")
   -- local hl_group = "DiffAdd"
@@ -52,7 +53,7 @@ function M.highlight(range)
 
   vim.defer_fn(function()
     vim.api.nvim_buf_clear_namespace(0, ns_id, 0, -1)
-  end, 250)
+  end, duration)
 end
 
 ---@param row integer
@@ -62,8 +63,9 @@ function M.jump(row, node)
   -- log(row, line, node)
   vim.api.nvim_win_set_cursor(0, { row, 0 })
   vim.cmd('normal! ^')
-  if require("treewalker").opts.highlight then
-    M.highlight(nodes.range(node))
+  local highlight = require("treewalker").opts.highlight
+  if highlight and highlight ~= 0 then
+    M.highlight(nodes.range(node), highlight ~= true and highlight or 250)
   end
 end
 
