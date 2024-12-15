@@ -22,13 +22,11 @@ end
 ---@param fn unknown
 ---@param expected_duration integer
 local function assert_called_after(fn, expected_duration)
-  ---@diagnostic disable: undefined-field
   fn:clear()
   local tolerance = 5
-  local start = vim.loop.hrtime()
+  local start = vim.uv.hrtime()
   vim.wait(expected_duration + tolerance * 2, function() return #fn.calls == 1 end, tolerance / 2)
-  assert(math.abs((vim.loop.hrtime() - start) / 1000000 - expected_duration) < tolerance)
-  ---@diagnostic enable: undefined-field
+  assert(math.abs((vim.uv.hrtime() - start) / 1000000 - expected_duration) < tolerance)
 end
 
 describe("Treewalker", function()
