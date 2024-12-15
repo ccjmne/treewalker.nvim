@@ -1,25 +1,26 @@
-local util = require('treewalker.util')
+local util = require "treewalker.util"
+
+local function tw()
+  -- return util.R('treewalker')
+  return require('treewalker')
+end
 
 local subcommands = {
   Up = function()
-    -- util.R('treewalker').move_up()
-    require('treewalker').move_up()
-  end,
-
-  Down = function()
-    -- util.R('treewalker').move_down()
-    require('treewalker').move_down()
+    tw().move_up()
   end,
 
   Left = function()
-    -- util.R('treewalker').move_out()
-    require('treewalker').move_out()
+    tw().move_out()
+  end,
+
+  Down = function()
+    tw().move_down()
   end,
 
   Right = function()
-    -- util.R('treewalker').move_in()
-    require('treewalker').move_in()
-  end,
+    tw().move_in()
+  end
 }
 
 local command_opts = {

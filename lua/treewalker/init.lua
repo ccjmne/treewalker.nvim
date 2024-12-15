@@ -99,11 +99,3 @@ function Treewalker.move_down()
 end
 
 return Treewalker
-
--- -- you can define your setup function here. Usually configurations can be merged, accepting outside params and
--- -- you can also put some validation here for those.
--- local config = {}
--- M.config = config
--- M.setup = function(args)
---   M.config = vim.tbl_deep_extend("force", M.config, args or {})
--- end
