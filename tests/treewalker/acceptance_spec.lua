@@ -18,15 +18,17 @@ local function assert_cursor_at(line, column, msg)
   assert.are.same({ line, column }, { current_line, current_column }, msg)
 end
 
--- Assert the stub is called after the expected duration
----@param fn unknown
----@param expected_duration integer
-local function assert_called_after(fn, expected_duration)
-  fn:clear()
+-- Count the number of calls made against the stub after a specified duration
+---@param api unknown
+---@param duration integer
+---@return integer
+local function calls_after(api, duration)
   local tolerance = 5
-  local start = vim.uv.hrtime()
-  vim.wait(expected_duration + tolerance * 2, function() return #fn.calls == 1 end, tolerance / 2)
-  assert(math.abs((vim.uv.hrtime() - start) / 1000000 - expected_duration) < tolerance)
+  local calls = #api.calls
+  vim.wait(duration - tolerance)
+  assert.equal(0, #api.calls - calls)
+  vim.wait(tolerance * 2)
+  return #api.calls - calls
 end
 
 describe("Treewalker", function()
@@ -130,17 +132,26 @@ describe("Treewalker", function()
       treewalker.opts.highlight = true
       vim.fn.cursor(23, 5)
       treewalker.move_out()
-      assert_called_after(clear_stub, 250)
+      treewalker.move_down()
+      treewalker.move_up()
+      treewalker.move_in()
+      assert.equal(4, calls_after(clear_stub, 250))
 
       treewalker.opts.highlight = 50
       vim.fn.cursor(23, 5)
       treewalker.move_out()
-      assert_called_after(clear_stub, 50)
+      treewalker.move_down()
+      treewalker.move_up()
+      treewalker.move_in()
+      assert.equal(4, calls_after(clear_stub, 50))
 
       treewalker.opts.highlight = 500
       vim.fn.cursor(23, 5)
       treewalker.move_out()
-      assert_called_after(clear_stub, 500)
+      treewalker.move_down()
+      treewalker.move_up()
+      treewalker.move_in()
+      assert.equal(4, calls_after(clear_stub, 500))
     end)
   end)
 
