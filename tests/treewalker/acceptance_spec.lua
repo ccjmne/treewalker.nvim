@@ -18,6 +18,19 @@ local function assert_cursor_at(line, column, msg)
   assert.are.same({ line, column }, { current_line, current_column }, msg)
 end
 
+-- Assert the stub is called after the expected duration
+---@param fn unknown
+---@param expected_duration integer
+local function assert_called_after(fn, expected_duration)
+  ---@diagnostic disable: undefined-field
+  fn:clear()
+  local tolerance = 5
+  local start = vim.loop.hrtime()
+  vim.wait(expected_duration + tolerance * 2, function() return #fn.calls == 1 end, tolerance / 2)
+  assert(math.abs((vim.loop.hrtime() - start) / 1000000 - expected_duration) < tolerance)
+  ---@diagnostic enable: undefined-field
+end
+
 describe("Treewalker", function()
   describe("regular lua file: ", function()
     load_fixture("/lua.lua", "lua")
@@ -89,6 +102,14 @@ describe("Treewalker", function()
       treewalker.move_in()
       assert.equal(0, #highlight_stub.calls)
 
+      treewalker.opts.highlight = 0
+      vim.fn.cursor(23, 5)
+      treewalker.move_out()
+      treewalker.move_down()
+      treewalker.move_up()
+      treewalker.move_in()
+      assert.equal(0, #highlight_stub.calls)
+
       treewalker.opts.highlight = false
       vim.fn.cursor(23, 5)
       treewalker.move_out()
@@ -104,6 +125,24 @@ describe("Treewalker", function()
       treewalker.move_up()
       treewalker.move_in()
       assert.equal(4, #highlight_stub.calls)
+
+      highlight_stub:revert()
+      local clear_stub = stub(vim.api, "nvim_buf_clear_namespace")
+
+      treewalker.opts.highlight = true
+      vim.fn.cursor(23, 5)
+      treewalker.move_out()
+      assert_called_after(clear_stub, 250)
+
+      treewalker.opts.highlight = 50
+      vim.fn.cursor(23, 5)
+      treewalker.move_out()
+      assert_called_after(clear_stub, 50)
+
+      treewalker.opts.highlight = 500
+      vim.fn.cursor(23, 5)
+      treewalker.move_out()
+      assert_called_after(clear_stub, 500)
     end)
   end)
 
