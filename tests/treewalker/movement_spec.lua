@@ -18,7 +18,7 @@ local function assert_cursor_at(line, column, msg)
   assert.are.same({ line, column }, { current_line, current_column }, msg)
 end
 
-describe("Treewalker", function()
+describe("Treewalker movement", function()
   describe("regular lua file: ", function()
     load_fixture("/lua.lua", "lua")
 
@@ -63,85 +63,19 @@ describe("Treewalker", function()
     end)
 
     it("doesn't jump into a comment", function()
-      vim.fn.cursor(177, 1) -- In a bigger function
+      vim.fn.cursor(177, 1)
       treewalker.move_in()
       assert_cursor_at(179, 3, "local")
     end)
 
     it("goes out of functions", function()
-      vim.fn.cursor(149, 7) -- In a bigger function
+      vim.fn.cursor(149, 7)
       treewalker.move_out()
       assert_cursor_at(148, 5, "if")
       treewalker.move_out()
       assert_cursor_at(146, 3, "while")
       treewalker.move_out()
       assert_cursor_at(143, 1, "function")
-    end)
-
-    it("respects highlight config option", function()
-      spy.on(ops, "highlight")
-      local bufclear = spy.on(vim.api, "nvim_buf_clear_namespace")
-
-      -- 'nvim_buf_clear_namespace' should be called <calls> times
-      -- within a 10ms tolerance window after <timeout>ms
-      local function assert_bufclears_after(timeout, calls)
-        bufclear:clear()
-        vim.wait(timeout - 5)
-        assert.spy(bufclear).was.not_called()
-        vim.wait(10)
-        assert.spy(bufclear).was.called(calls)
-      end
-
-      treewalker.setup()
-      vim.fn.cursor(23, 5)
-      treewalker.move_out()
-      treewalker.move_down()
-      treewalker.move_up()
-      treewalker.move_in()
-      assert.spy(ops.highlight).was.not_called()
-
-      treewalker.setup({ highlight = 0 })
-      vim.fn.cursor(23, 5)
-      treewalker.move_out()
-      treewalker.move_down()
-      treewalker.move_up()
-      treewalker.move_in()
-      assert.spy(ops.highlight).was.not_called()
-
-      treewalker.setup({ highlight = false })
-      vim.fn.cursor(23, 5)
-      treewalker.move_out()
-      treewalker.move_down()
-      treewalker.move_up()
-      treewalker.move_in()
-      assert.spy(ops.highlight).was.not_called()
-
-      treewalker.setup({ highlight = true })
-      vim.fn.cursor(23, 5)
-      treewalker.move_out()
-      treewalker.move_down()
-      treewalker.move_up()
-      treewalker.move_in()
-      assert.spy(ops.highlight).was.called(4)
-      assert_bufclears_after(250, 4)
-
-      treewalker.setup({ highlight = 50 })
-      vim.fn.cursor(23, 5)
-      treewalker.move_out()
-      treewalker.move_down()
-      treewalker.move_up()
-      treewalker.move_in()
-      assert.spy(ops.highlight).was.called(8)
-      assert_bufclears_after(50, 4)
-
-      treewalker.setup({ highlight = 500 })
-      vim.fn.cursor(23, 5)
-      treewalker.move_out()
-      treewalker.move_down()
-      treewalker.move_up()
-      treewalker.move_in()
-      assert.spy(ops.highlight).was.called(12)
-      assert_bufclears_after(500, 4)
     end)
   end)
 

@@ -1,3 +1,4 @@
+![build status](https://github.com/aaronik/treewalker.nvim/actions/workflows/test.yml/badge.svg)
 <span style="height: 20px;">
   <img alt="Static Badge" src="https://img.shields.io/badge/100%25_lua-purple" style="height: 20px;">
 </span>
@@ -30,7 +31,8 @@ Moving slowly, showing each command
 {
   "aaronik/treewalker.nvim",
   opts = {
-    highlight = true -- default is false; can also be a duration
+    highlight = true -- Whether to briefly highlight the node after jumping to it
+                     -- Can be numeric to specify highlight duration instead
   }
 }
 ```
