@@ -1,3 +1,27 @@
+class Person:
+    def __init__(self, name):
+        self.name = name
+
+    def greet(self):
+        print(f"Hello, my name is {self.name}!")
+
+class Book:
+    def __init__(self, title, author):
+        self.title = title
+        self.author = author
+
+    def describe(self):
+        print(f"{self.title} by {self.author}")
+
+class Car:
+    def __init__(self, make, model, year):
+        self.make = make
+        self.model = model
+        self.year = year
+
+    def display_info(self):
+        print(f"Make: {self.make}, Model: {self.model}, Year: {self.year}")
+
 def main():
     """
     This function demonstrates a nested structure.

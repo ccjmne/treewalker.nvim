@@ -18,7 +18,7 @@ local function assert_cursor_at(line, column, msg)
   assert.are.same({ line, column }, { current_line, current_column }, msg)
 end
 
-describe("Treewalker", function()
+describe("Treewalker movement", function()
   describe("regular lua file: ", function()
     load_fixture("/lua.lua", "lua")
 
@@ -63,13 +63,13 @@ describe("Treewalker", function()
     end)
 
     it("doesn't jump into a comment", function()
-      vim.fn.cursor(177, 1) -- In a bigger function
+      vim.fn.cursor(177, 1)
       treewalker.move_in()
       assert_cursor_at(179, 3, "local")
     end)
 
     it("goes out of functions", function()
-      vim.fn.cursor(149, 7) -- In a bigger function
+      vim.fn.cursor(149, 7)
       treewalker.move_out()
       assert_cursor_at(148, 5, "if")
       treewalker.move_out()

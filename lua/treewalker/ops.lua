@@ -16,13 +16,6 @@ end
 
 local M = {}
 
----set cursor without throwing error
----@param row integer
----@param col integer
-function M.safe_set_cursor(row, col)
-  pcall(vim.api.nvim_win_set_cursor, 0, { row, col }) -- catch any errors in nvim_win_set_cursor
-end
-
 ---Flash a highlight over the given range
 ---@param range Range4
 ---@param duration integer
@@ -63,9 +56,9 @@ function M.jump(row, node)
   -- log(row, line, node)
   vim.api.nvim_win_set_cursor(0, { row, 0 })
   vim.cmd('normal! ^')
-  local highlight = require("treewalker").opts.highlight
-  if highlight and highlight ~= 0 then
-    M.highlight(nodes.range(node), highlight ~= true and highlight or 250)
+  if require("treewalker").opts.highlight then
+    node = nodes.get_highest_coincident(node)
+    M.highlight(nodes.range(node))
   end
 end
 

@@ -1,36 +1,47 @@
 local util = require "treewalker.util"
-local lines= require "treewalker.lines"
+local lines = require "treewalker.lines"
 
-local NON_TARGET_NODE_MATCHERS = {
-  -- "chunk", -- lua
-  "^.*comment.*$",
+-- These are regexes but just happen to be real simple so far
+local TARGET_BLACKLIST_TYPE_MATCHERS = {
+  "comment",
 }
 
-local TARGET_DESCENDANT_TYPES = {
-  "body_statement",  -- lua, rb
-  "block",           -- lua
-  "statement_block", -- lua
-
-  -- "then", -- helps rb, hurts lua
-  "do_block", -- rb
+local HIGHLIGHT_BLACKLIST_TYPE_MATCHERS = {
+  "module", -- python
+  "chunk", -- lua
+  "body", -- ruby
+  "block", -- ruby
+  "program", -- ruby
+  "haskell", -- guess which language starts their module tree with this node
+  "translation_unit", -- c module
+  "source_file", -- rust
 }
+
 
 local M = {}
 
 ---@param node TSNode
+---@param matchers string[]
 ---@return boolean
-function M.is_jump_target(node)
-  for _, matcher in ipairs(NON_TARGET_NODE_MATCHERS) do
-    -- If it's a banned type
+local function is_matched_in(node, matchers)
+  for _, matcher in ipairs(matchers) do
     if node:type():match(matcher) then
-      return false
+      return true
     end
   end
-  return true
+  return false
 end
 
-function M.is_descendant_jump_target(node)
-  return util.contains(TARGET_DESCENDANT_TYPES, node:type())
+---@param node TSNode
+---@return boolean
+function M.is_jump_target(node)
+  return not is_matched_in(node, TARGET_BLACKLIST_TYPE_MATCHERS)
+end
+
+---@param node TSNode
+---@return boolean
+function M.is_highlight_target(node)
+  return not is_matched_in(node, HIGHLIGHT_BLACKLIST_TYPE_MATCHERS)
 end
 
 ---Do the nodes have the same starting point
@@ -43,6 +54,14 @@ function M.have_same_start(node1, node2)
   return
       srow1 == srow2 and
       scol1 == scol2
+end
+
+---Do the nodes have the same starting row
+---@param node1 TSNode
+---@param node2 TSNode
+---@return boolean
+function M.have_same_row(node1, node2)
+  return M.get_row(node1) == M.get_row(node2)
 end
 
 ---Do the nodes have the same level of indentation
@@ -83,41 +102,54 @@ end
 ---@param node TSNode
 ---@return TSNode[]
 function M.get_descendants(node)
-    local descendants = {}
+  local descendants = {}
 
-    -- Helper function to recursively collect descendants
-    local function collect_descendants(current_node)
-        local child_count = current_node:child_count()
-        for i = 0, child_count - 1 do
-            local child = current_node:child(i)
-            table.insert(descendants, child)
-            -- Recursively collect descendants of the child
-            collect_descendants(child)
-        end
+  -- Helper function to recursively collect descendants
+  local function collect_descendants(current_node)
+    local child_count = current_node:child_count()
+    for i = 0, child_count - 1 do
+      local child = current_node:child(i)
+      table.insert(descendants, child)
+      -- Recursively collect descendants of the child
+      collect_descendants(child)
     end
+  end
 
-    -- Start the recursive collection with the given node
-    collect_descendants(node)
+  -- Start the recursive collection with the given node
+  collect_descendants(node)
 
-    return descendants
+  return descendants
+end
+
+-- Get farthest ancestor (or self) at the same starting row
+---@param node TSNode
+---@return TSNode
+function M.get_highest_coincident(node)
+  local parent = node:parent()
+  -- prefer row over start on account of lisps / S-expressions, which start with (identifier, ..)
+  while parent and M.have_same_row(node, parent) do
+    if M.is_highlight_target(parent) then node = parent end
+    parent = parent:parent()
+  end
+  return node
 end
 
 --- Take a list of nodes and unique them based on line start
 ---@param nodes TSNode[]
 ---@return TSNode[]
 function M.unique_per_line(nodes)
-    local unique_nodes = {}
-    local seen_lines = {}
+  local unique_nodes = {}
+  local seen_lines = {}
 
-    for _, node in ipairs(nodes) do
-        local line = node:start()  -- Assuming node:start() returns the line number of the node
-        if not seen_lines[line] then
-            table.insert(unique_nodes, node)
-            seen_lines[line] = true
-        end
+  for _, node in ipairs(nodes) do
+    local line = node:start() -- Assuming node:start() returns the line number of the node
+    if not seen_lines[line] then
+      table.insert(unique_nodes, node)
+      seen_lines[line] = true
     end
+  end
 
-    return unique_nodes
+  return unique_nodes
 end
 
 -- Easy conversion to table
